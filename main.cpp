@@ -1,5 +1,16 @@
 #include <raylib.h>
 
+struct Player
+ {
+    char* name;
+    int score = 0;
+
+    void updateScore()
+    {
+        score++;
+    }
+};
+
 struct Ball
 {
     float positionX, positionY;
@@ -10,6 +21,14 @@ struct Ball
     {
         DrawCircle((int) positionX, (int) positionY, radius, WHITE);
     }
+
+    void DefaultPosition()
+    {
+            positionX = GetScreenWidth() / 2;
+            positionY = GetScreenHeight() / 2;
+            speedX = 300;
+            speedY = 300;
+    }
 };
 
 struct Paddle
@@ -17,6 +36,7 @@ struct Paddle
     float positionX, positionY;
     float speed;
     float width, height;
+    int score = 0;
 
     Rectangle GetRectangle()
     {
@@ -35,12 +55,14 @@ int main() {
     InitWindow(800, 600, "Game");
     SetWindowState(FLAG_VSYNC_HINT);
 
+    Player player1;
+    player1.name = (char*)"Left Player";
+    Player player2;
+    player2.name = (char*)"Right Player";
+
     Ball ball;
-    ball.positionX = GetScreenWidth() / 2.0f;
-    ball.positionY = GetScreenHeight() / 2.0f;
     ball.radius = 5.0f;
-    ball.speedX = 100.0f;
-    ball.speedY = 300.0f;
+    ball.DefaultPosition();
 
     Paddle leftPaddle;
     leftPaddle.positionX = 50;
@@ -75,22 +97,31 @@ int main() {
 
         if (IsKeyDown(KEY_W))
         {
-            leftPaddle.positionY -= leftPaddle.speed * GetFrameTime();
+            if (leftPaddle.positionY > 0) {
+                leftPaddle.positionY -= leftPaddle.speed * GetFrameTime();
+            }     
         }
 
         if (IsKeyDown(KEY_S))
         {
-            leftPaddle.positionY += leftPaddle.speed * GetFrameTime();
+            if (leftPaddle.positionY < GetScreenHeight()) {
+                leftPaddle.positionY += leftPaddle.speed * GetFrameTime();
+            }
         }
 
         if (IsKeyDown(KEY_UP))
         {
-            rightPaddle.positionY -= rightPaddle.speed * GetFrameTime();
+            if (rightPaddle.positionY > 0) {
+                rightPaddle.positionY -= rightPaddle.speed * GetFrameTime();
+            }
         }
 
         if (IsKeyDown(KEY_DOWN))
         {
-            rightPaddle.positionY += rightPaddle.speed * GetFrameTime();
+            if (rightPaddle.positionY < GetScreenHeight())
+            {
+                rightPaddle.positionY += rightPaddle.speed * GetFrameTime();
+            }
         }
 
         if (CheckCollisionCircleRec(Vector2{ ball.positionX, ball.positionY }, ball.radius,  leftPaddle.GetRectangle()))
@@ -113,27 +144,40 @@ int main() {
 
         if (ball.positionX < 0)
         {
-            winnerText = "Right player wins!";
+            // winnerText = "Right player wins!";
+            player2.updateScore();
+            ball.DefaultPosition();
         }
 
         if (ball.positionX > GetScreenWidth())
         {
+            // winnerText = "Left player wins!";
+            player1.updateScore();
+            ball.DefaultPosition();
+        }
+
+        if (player1.score == 5) {
             winnerText = "Left player wins!";
+        } 
+        else if (player2.score == 5) {
+            winnerText = "Right player wins!";
         }
 
         if (winnerText && IsKeyPressed(KEY_SPACE))
         {
-            ball.positionX = GetScreenWidth() / 2;
-            ball.positionY = GetScreenHeight() / 2;
-            ball.speedX = 300;
-            ball.speedY = 300;
+            ball.DefaultPosition();
             winnerText = nullptr;
         }
 
         BeginDrawing();
             ClearBackground(BLACK);
+            DrawFPS(10, 10);
+            MeasureText(player1.name, 20);
+            DrawText(TextFormat("%s: %d", player1.name, player1.score), MeasureText(player1.name, 20) + 50, 50, 20, RED);
+            DrawText(TextFormat("%s: %d", player2.name, player2.score), GetScreenWidth() - MeasureText(player2.name, 20) * 2 - 50, 50, 20, RED);
 
-            ball.Draw();
+// const char *text, int posX, int posY, int fontSize, Color color
+            ball.Draw();        
             leftPaddle.Draw();
             rightPaddle.Draw();
 
@@ -142,8 +186,6 @@ int main() {
                 int textWidth = MeasureText(winnerText, 60);
                 DrawText(winnerText, GetScreenWidth() / 2 - textWidth / 2, GetScreenHeight() / 2 - 30, 60, RED);
             }
-
-            DrawFPS(10, 10);
         EndDrawing();
     }
     CloseWindow();
