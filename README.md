@@ -1,2 +1,2 @@
-# raylib-vscode-template
-raylib template for Visual Studio Code
+# Game by Railyb template
+Example of PingPong game by raiylib
